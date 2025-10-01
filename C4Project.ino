@@ -18,6 +18,9 @@
 #define LED_BOMB  19
 #define LED_CT    18
 
+#define ROUND_PLANT_TIME_SEC 60*30
+#define ROUND_DEFUSE_TIME_SEC 60*10
+
 typedef enum
 {
   NONE,
@@ -153,14 +156,14 @@ void vRoundTask(void *pvParameters)
   int iPlantPressTime = 4000;
   int iDefusePressTime = 10000;
 
-  unsigned long remainingTime = 60*15*100;
+  unsigned long remainingTime = ROUND_PLANT_TIME_SEC*100;
   unsigned long nextBeepTime = 0;
   unsigned long nextBlinkTime = 0;
 
   bool bButtonReleaseNeed = false;
   bool bSoundInExecution = false;
 
-  sTimerCommand.iStartTime = 15*60;
+  sTimerCommand.iStartTime = ROUND_PLANT_TIME_SEC;
   sTimerCommand.bFreeze = true;
   xQueueSend(xTimerQueue, &sTimerCommand, 0);
 
@@ -191,7 +194,7 @@ void vRoundTask(void *pvParameters)
         if(!bButtonReleaseNeed && iButtonPressedTime >= iPlantPressTime)
         {
           bButtonReleaseNeed = true;
-          sTimerCommand.iStartTime = 60*15;
+          sTimerCommand.iStartTime = ROUND_PLANT_TIME_SEC;
           sTimerCommand.bFreeze = true;
           xQueueSend(xTimerQueue, &sTimerCommand, 0);
           vTaskDelay(pdMS_TO_TICKS(100));
@@ -209,7 +212,7 @@ void vRoundTask(void *pvParameters)
       }
       case ROUND_START:
       {
-        sTimerCommand.iStartTime = 60*15;
+        sTimerCommand.iStartTime = ROUND_PLANT_TIME_SEC;
         sTimerCommand.bFreeze = false;
         xQueueSend(xTimerQueue, &sTimerCommand, 0);
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -244,7 +247,7 @@ void vRoundTask(void *pvParameters)
         {
           bButtonReleaseNeed = true;
 
-          sTimerCommand.iStartTime = 5*60;
+          sTimerCommand.iStartTime = ROUND_DEFUSE_TIME_SEC;
           sTimerCommand.bFreeze = false;
           xQueueSend(xTimerQueue, &sTimerCommand, 0);
 
@@ -310,7 +313,7 @@ void vRoundTask(void *pvParameters)
         {
           bButtonReleaseNeed = true;
 
-          sTimerCommand.iStartTime = 60*15;
+          sTimerCommand.iStartTime = ROUND_PLANT_TIME_SEC;
           sTimerCommand.bFreeze = true;
           xQueueSend(xTimerQueue, &sTimerCommand, 0);
           vTaskDelay(pdMS_TO_TICKS(100));
