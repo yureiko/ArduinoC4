@@ -9,11 +9,11 @@
 #define PLANT_DEFUSE_BUTTON 13
 #define BUZZER_PIN          2
 
-#define LED_BAR_0 23
-#define LED_BAR_1 22
+#define LED_BAR_0 21
+#define LED_BAR_1 3
 #define LED_BAR_2 1
-#define LED_BAR_3 3
-#define LED_BAR_4 21
+#define LED_BAR_3 22
+#define LED_BAR_4 23
 
 #define LED_BOMB  19
 #define LED_CT    18
@@ -45,6 +45,16 @@ typedef struct
 
 typedef struct
 {
+  bool bLed0On;
+  bool bLed1On;
+  bool bLed2On;
+  bool bLed3On;
+  bool bLed4On;
+} tsOutputLedBar;
+
+typedef struct
+{
+  tsOutputLedBar sledBar;
   int iOutput;
   int iTimeOn;
   int iTimeOff;
@@ -75,11 +85,22 @@ void setup() {
   pinMode(LED_BOMB , OUTPUT);
   pinMode(LED_CT   , OUTPUT);
 
+  digitalWrite(LED_BAR_0, HIGH);
+  digitalWrite(LED_BAR_1, HIGH);
+  digitalWrite(LED_BAR_2, HIGH);
+  digitalWrite(LED_BAR_3, HIGH);
+  digitalWrite(LED_BAR_4, HIGH);
+
   digitalWrite(LED_BAR_0, LOW);
+  delay(500);
   digitalWrite(LED_BAR_1, LOW);
+  delay(500);
   digitalWrite(LED_BAR_2, LOW);
+  delay(500);
   digitalWrite(LED_BAR_3, LOW);
+  delay(500);
   digitalWrite(LED_BAR_4, LOW);
+  delay(500);
   digitalWrite(LED_BOMB , LOW);
   digitalWrite(LED_CT   , LOW);
 
@@ -96,10 +117,15 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
 
   digitalWrite(LED_BAR_0, HIGH);
+  delay(500);
   digitalWrite(LED_BAR_1, HIGH);
+  delay(500);
   digitalWrite(LED_BAR_2, HIGH);
+  delay(500);
   digitalWrite(LED_BAR_3, HIGH);
+  delay(500);
   digitalWrite(LED_BAR_4, HIGH);
+  delay(500);
   digitalWrite(LED_BOMB , HIGH);
   digitalWrite(LED_CT   , HIGH);
 
@@ -150,7 +176,7 @@ void vRoundTask(void *pvParameters)
 {
   
   tsTimerCommand sTimerCommand = {};
-  tsBuzzerCommand sBuzzerCommand = {0, 0, 0, 0};
+  tsBuzzerCommand sBuzzerCommand = {{false,false,false,false,false},0, 0, 0, 0};
 
   int iButtonPressedTime = 0;
   int iPlantPressTime = 4000;
@@ -199,6 +225,11 @@ void vRoundTask(void *pvParameters)
           xQueueSend(xTimerQueue, &sTimerCommand, 0);
           vTaskDelay(pdMS_TO_TICKS(100));
 
+          sBuzzerCommand.sledBar.bLed0On = false;
+          sBuzzerCommand.sledBar.bLed1On = false;
+          sBuzzerCommand.sledBar.bLed2On = false;
+          sBuzzerCommand.sledBar.bLed3On = false;
+          sBuzzerCommand.sledBar.bLed4On = false;
           sBuzzerCommand.iOutput = LED_CT;
           sBuzzerCommand.iTimeOn = 500;
           sBuzzerCommand.iTimeOff = 1000;
@@ -231,10 +262,11 @@ void vRoundTask(void *pvParameters)
         else if (remainingTime <= nextBlinkTime)
         {
           bSoundInExecution = true;
+
           sBuzzerCommand.iOutput = LED_BOMB;
           sBuzzerCommand.iTimeOn = 100;
           sBuzzerCommand.iTimeOff = 25;
-          sBuzzerCommand.iReps = 1;
+          sBuzzerCommand.iReps = 1;   
           sBuzzerCommand.iBeep = false;  
           xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
 
@@ -243,6 +275,21 @@ void vRoundTask(void *pvParameters)
             nextBlinkTime = remainingTime - 5;
           }
         }
+        else
+        {
+          sBuzzerCommand.sledBar.bLed0On = iButtonPressedTime > 500;
+          sBuzzerCommand.sledBar.bLed1On = iButtonPressedTime >= iPlantPressTime * 0.25;
+          sBuzzerCommand.sledBar.bLed2On = iButtonPressedTime >= iPlantPressTime * 0.50;
+          sBuzzerCommand.sledBar.bLed3On = iButtonPressedTime >= iPlantPressTime * 0.75;
+          sBuzzerCommand.sledBar.bLed4On = iButtonPressedTime >= iPlantPressTime;
+          sBuzzerCommand.iOutput = LED_BOMB;
+          sBuzzerCommand.iTimeOn = 100;
+          sBuzzerCommand.iTimeOff = 25;
+          sBuzzerCommand.iReps = 0;
+          sBuzzerCommand.iBeep = false;  
+          xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
+        }
+        
         if(!bButtonReleaseNeed && iButtonPressedTime >= iPlantPressTime)
         {
           bButtonReleaseNeed = true;
@@ -258,6 +305,7 @@ void vRoundTask(void *pvParameters)
         else if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
         {
           bSoundInExecution = true;
+
           sBuzzerCommand.iOutput = LED_BOMB;
           sBuzzerCommand.iTimeOn = 100;
           sBuzzerCommand.iTimeOff = 25;
@@ -284,6 +332,20 @@ void vRoundTask(void *pvParameters)
           sBuzzerCommand.iBeep = true;  
           xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
         }
+        else
+        {
+          sBuzzerCommand.sledBar.bLed0On = !(iButtonPressedTime > 500);
+          sBuzzerCommand.sledBar.bLed1On = !(iButtonPressedTime >= iDefusePressTime * 0.25);
+          sBuzzerCommand.sledBar.bLed2On = !(iButtonPressedTime >= iDefusePressTime * 0.50);
+          sBuzzerCommand.sledBar.bLed3On = !(iButtonPressedTime >= iDefusePressTime * 0.75);
+          sBuzzerCommand.sledBar.bLed4On = !(iButtonPressedTime >= iDefusePressTime);
+          sBuzzerCommand.iOutput = LED_BOMB;
+          sBuzzerCommand.iTimeOn = 100;
+          sBuzzerCommand.iTimeOff = 25;
+          sBuzzerCommand.iReps = 0;
+          sBuzzerCommand.iBeep = false;  
+          xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
+        }
         if(!bButtonReleaseNeed && iButtonPressedTime >= iDefusePressTime)
         {
           bButtonReleaseNeed = true;
@@ -292,12 +354,20 @@ void vRoundTask(void *pvParameters)
           sTimerCommand.bFreeze = false;
           xQueueSend(xTimerQueue, &sTimerCommand, 0);
 
+          sBuzzerCommand.iOutput = LED_BOMB;
+          sBuzzerCommand.iTimeOn = 100;
+          sBuzzerCommand.iTimeOff = 25;
+          sBuzzerCommand.iReps = 0;
+          sBuzzerCommand.iBeep = false;  
+          xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
+
           eWinner = CT_WIN;
           eState = eRoundState::ROUND_OVER;
         }
         else if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
         {
           bSoundInExecution = true;
+
           sBuzzerCommand.iOutput = LED_CT;
           sBuzzerCommand.iTimeOn = 100;
           sBuzzerCommand.iTimeOff = 25;
@@ -322,6 +392,11 @@ void vRoundTask(void *pvParameters)
         }
         if (eWinner == CT_WIN)
         {
+          sBuzzerCommand.sledBar.bLed0On = false;
+          sBuzzerCommand.sledBar.bLed1On = false;
+          sBuzzerCommand.sledBar.bLed2On = false;
+          sBuzzerCommand.sledBar.bLed3On = false;
+          sBuzzerCommand.sledBar.bLed4On = false;
           sBuzzerCommand.iOutput = LED_CT;
           sBuzzerCommand.iTimeOn = 1000;
           sBuzzerCommand.iTimeOff = 500;
@@ -333,6 +408,11 @@ void vRoundTask(void *pvParameters)
         }
         else if (eWinner == TR_WIN)
         {
+          sBuzzerCommand.sledBar.bLed0On = true;
+          sBuzzerCommand.sledBar.bLed1On = true;
+          sBuzzerCommand.sledBar.bLed2On = true;
+          sBuzzerCommand.sledBar.bLed3On = true;
+          sBuzzerCommand.sledBar.bLed4On = true;
           sBuzzerCommand.iOutput = LED_BOMB;
           sBuzzerCommand.iTimeOn = 25;
           sBuzzerCommand.iTimeOff = 25;
@@ -438,6 +518,12 @@ void vBuzzerTask(void *pvParameters)
   while (1)
   {
     xQueueReceive(xBuzzerQueue, &sBuzzerCommand, pdMS_TO_TICKS(10));
+
+    digitalWrite(LED_BAR_0, !(sBuzzerCommand.sledBar.bLed0On));
+    digitalWrite(LED_BAR_1, !(sBuzzerCommand.sledBar.bLed1On));
+    digitalWrite(LED_BAR_2, !(sBuzzerCommand.sledBar.bLed2On));
+    digitalWrite(LED_BAR_3, !(sBuzzerCommand.sledBar.bLed3On));
+    digitalWrite(LED_BAR_4, !(sBuzzerCommand.sledBar.bLed4On));
 
     while(sBuzzerCommand.iReps > 0)
     {
