@@ -18,7 +18,7 @@
 #define LED_BOMB  19
 #define LED_CT    18
 
-#define ROUND_PLANT_TIME_SEC 60*30
+#define ROUND_PLANT_TIME_SEC 60*40
 #define ROUND_DEFUSE_TIME_SEC 60*10
 
 typedef enum
@@ -92,15 +92,15 @@ void setup() {
   digitalWrite(LED_BAR_4, HIGH);
 
   digitalWrite(LED_BAR_0, LOW);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_1, LOW);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_2, LOW);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_3, LOW);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_4, LOW);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BOMB , LOW);
   digitalWrite(LED_CT   , LOW);
 
@@ -117,15 +117,15 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
 
   digitalWrite(LED_BAR_0, HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_1, HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_2, HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_3, HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BAR_4, HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(LED_BOMB , HIGH);
   digitalWrite(LED_CT   , HIGH);
 
@@ -179,8 +179,8 @@ void vRoundTask(void *pvParameters)
   tsBuzzerCommand sBuzzerCommand = {{false,false,false,false,false},0, 0, 0, 0};
 
   int iButtonPressedTime = 0;
-  int iPlantPressTime = 4000;
-  int iDefusePressTime = 10000;
+  int iPlantPressTime = 30000;
+  int iDefusePressTime = 30000;
 
   unsigned long remainingTime = ROUND_PLANT_TIME_SEC*100;
   unsigned long nextBeepTime = 0;
@@ -217,7 +217,7 @@ void vRoundTask(void *pvParameters)
       default:
       case IDLE:
       {
-        if(!bButtonReleaseNeed && iButtonPressedTime >= iPlantPressTime)
+        if(!bButtonReleaseNeed && iButtonPressedTime >= 5000)
         {
           bButtonReleaseNeed = true;
           sTimerCommand.iStartTime = ROUND_PLANT_TIME_SEC;
@@ -277,7 +277,7 @@ void vRoundTask(void *pvParameters)
         }
         else if(!bButtonReleaseNeed)
         {
-          sBuzzerCommand.sledBar.bLed0On = iButtonPressedTime > 500;
+          sBuzzerCommand.sledBar.bLed0On = iButtonPressedTime > 100;
           sBuzzerCommand.sledBar.bLed1On = iButtonPressedTime >= iPlantPressTime * 0.25;
           sBuzzerCommand.sledBar.bLed2On = iButtonPressedTime >= iPlantPressTime * 0.50;
           sBuzzerCommand.sledBar.bLed3On = iButtonPressedTime >= iPlantPressTime * 0.75;
@@ -338,7 +338,7 @@ void vRoundTask(void *pvParameters)
         }
         else if(!bButtonReleaseNeed)
         {
-          sBuzzerCommand.sledBar.bLed0On = !(iButtonPressedTime > 500);
+          sBuzzerCommand.sledBar.bLed0On = !(iButtonPressedTime > 100);
           sBuzzerCommand.sledBar.bLed1On = !(iButtonPressedTime >= iDefusePressTime * 0.25);
           sBuzzerCommand.sledBar.bLed2On = !(iButtonPressedTime >= iDefusePressTime * 0.50);
           sBuzzerCommand.sledBar.bLed3On = !(iButtonPressedTime >= iDefusePressTime * 0.75);
@@ -388,7 +388,7 @@ void vRoundTask(void *pvParameters)
       }
       case ROUND_OVER:
       {
-        if(!bButtonReleaseNeed && iButtonPressedTime >= iPlantPressTime)
+        if(!bButtonReleaseNeed && iButtonPressedTime >= 5000)
         {
           bButtonReleaseNeed = true;
 
