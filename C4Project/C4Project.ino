@@ -275,18 +275,32 @@ void vRoundTask(void *pvParameters)
             nextBlinkTime = remainingTime - 5;
           }
         }
-        else
+        else if(!bButtonReleaseNeed)
         {
           sBuzzerCommand.sledBar.bLed0On = iButtonPressedTime > 500;
           sBuzzerCommand.sledBar.bLed1On = iButtonPressedTime >= iPlantPressTime * 0.25;
           sBuzzerCommand.sledBar.bLed2On = iButtonPressedTime >= iPlantPressTime * 0.50;
           sBuzzerCommand.sledBar.bLed3On = iButtonPressedTime >= iPlantPressTime * 0.75;
           sBuzzerCommand.sledBar.bLed4On = iButtonPressedTime >= iPlantPressTime;
-          sBuzzerCommand.iOutput = LED_BOMB;
-          sBuzzerCommand.iTimeOn = 100;
-          sBuzzerCommand.iTimeOff = 25;
-          sBuzzerCommand.iReps = 0;
-          sBuzzerCommand.iBeep = false;  
+
+          if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
+          {
+            bSoundInExecution = true;
+
+            sBuzzerCommand.iOutput = LED_BOMB;
+            sBuzzerCommand.iTimeOn = 100;
+            sBuzzerCommand.iTimeOff = 25;
+            sBuzzerCommand.iReps = 2;
+            sBuzzerCommand.iBeep = true;  
+          }
+          else
+          {
+            sBuzzerCommand.iOutput = LED_BOMB;
+            sBuzzerCommand.iTimeOn = 100;
+            sBuzzerCommand.iTimeOff = 25;
+            sBuzzerCommand.iReps = 0;
+            sBuzzerCommand.iBeep = false;  
+          }
           xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
         }
         
@@ -302,17 +316,7 @@ void vRoundTask(void *pvParameters)
 
           eState = eRoundState::BOMB_PLANTED;
         }
-        else if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
-        {
-          bSoundInExecution = true;
-
-          sBuzzerCommand.iOutput = LED_BOMB;
-          sBuzzerCommand.iTimeOn = 100;
-          sBuzzerCommand.iTimeOff = 25;
-          sBuzzerCommand.iReps = 2;
-          sBuzzerCommand.iBeep = true;  
-          xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
-        }
+        
         break;
       }
       case BOMB_PLANTED:
@@ -332,18 +336,33 @@ void vRoundTask(void *pvParameters)
           sBuzzerCommand.iBeep = true;  
           xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
         }
-        else
+        else if(!bButtonReleaseNeed)
         {
           sBuzzerCommand.sledBar.bLed0On = !(iButtonPressedTime > 500);
           sBuzzerCommand.sledBar.bLed1On = !(iButtonPressedTime >= iDefusePressTime * 0.25);
           sBuzzerCommand.sledBar.bLed2On = !(iButtonPressedTime >= iDefusePressTime * 0.50);
           sBuzzerCommand.sledBar.bLed3On = !(iButtonPressedTime >= iDefusePressTime * 0.75);
           sBuzzerCommand.sledBar.bLed4On = !(iButtonPressedTime >= iDefusePressTime);
-          sBuzzerCommand.iOutput = LED_BOMB;
-          sBuzzerCommand.iTimeOn = 100;
-          sBuzzerCommand.iTimeOff = 25;
-          sBuzzerCommand.iReps = 0;
-          sBuzzerCommand.iBeep = false;  
+
+          if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
+          {
+            bSoundInExecution = true;
+
+            sBuzzerCommand.iOutput = LED_CT;
+            sBuzzerCommand.iTimeOn = 100;
+            sBuzzerCommand.iTimeOff = 25;
+            sBuzzerCommand.iReps = 2;
+            sBuzzerCommand.iBeep = true;   
+
+          }
+          else
+          {
+            sBuzzerCommand.iOutput = LED_BOMB;
+            sBuzzerCommand.iTimeOn = 100;
+            sBuzzerCommand.iTimeOff = 25;
+            sBuzzerCommand.iReps = 0;
+            sBuzzerCommand.iBeep = false;  
+          }
           xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
         }
         if(!bButtonReleaseNeed && iButtonPressedTime >= iDefusePressTime)
@@ -364,17 +383,7 @@ void vRoundTask(void *pvParameters)
           eWinner = CT_WIN;
           eState = eRoundState::ROUND_OVER;
         }
-        else if(!bSoundInExecution && iButtonPressedTime > 100 && iButtonPressedTime < 500)
-        {
-          bSoundInExecution = true;
 
-          sBuzzerCommand.iOutput = LED_CT;
-          sBuzzerCommand.iTimeOn = 100;
-          sBuzzerCommand.iTimeOff = 25;
-          sBuzzerCommand.iReps = 2;
-          sBuzzerCommand.iBeep = true;   
-          xQueueSend(xBuzzerQueue, &sBuzzerCommand, 0);
-        }
         break;
       }
       case ROUND_OVER:
